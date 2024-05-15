@@ -18,6 +18,16 @@ class AIPlayer {
     return checkWinner(robot) || checkWinner(user) || isFull();
   }
 
+  //setRobotValue
+  void setRobot(String robot){
+    this.robot=robot;
+  }
+
+  //setUser
+  void setUser(String user){
+    this.user=user;
+  }
+
   // Check if the specified player has won
   bool checkWinner(String player) {
     // Check rows
@@ -65,7 +75,7 @@ class AIPlayer {
 
 
 // Minimax algorithm with alpha-beta pruning
-  int minimax(AIPlayer board, int depth, bool isMaximizing, int alpha, int beta) {
+  int minimax(AIPlayer board, int depth, bool isMaximizingPlayer, int alpha, int beta) {
     if (board.gameOver() || depth == 0) {
       if (board.checkWinner(robot)) {
         return 10;
@@ -75,11 +85,11 @@ class AIPlayer {
       return 0;
     }
 
-    if (isMaximizing) {
+    if (isMaximizingPlayer) {
       int maxEval = -1000;
       for (var move in board.availableMoves()) {
         board.makeMove(move.x, move.y, robot);
-        int eval = minimax(board, depth - 1, false, alpha, beta);
+        int eval = minimax(board, depth - 1, !isMaximizingPlayer, alpha, beta);
         maxEval = max(maxEval, eval);
         alpha = max(alpha, eval);
         board.makeMove(move.x, move.y, ''); // Undo move
@@ -92,7 +102,7 @@ class AIPlayer {
       int minEval = 1000;
       for (var move in board.availableMoves()) {
         board.makeMove(move.x, move.y, user);
-        int eval = minimax(board, depth - 1, true, alpha, beta);
+        int eval = minimax(board, depth - 1, !isMaximizingPlayer, alpha, beta);
         minEval = min(minEval, eval);
         beta = min(beta, eval);
         board.makeMove(move.x, move.y, ''); // Undo move

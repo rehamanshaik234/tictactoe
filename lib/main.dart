@@ -6,7 +6,7 @@ import 'package:playspace/controller/provider/global_var/global_variables_provid
 import 'package:playspace/utils/constants/app_colors.dart';
 import 'package:playspace/utils/routes/RouteNames.dart';
 import 'package:playspace/utils/routes/Routes.dart';
-import 'package:playspace/views/game/board.dart';
+import 'package:playspace/views/game/single_player/single_player.dart';
 import 'package:provider/provider.dart';
 
 void main()async{
@@ -35,7 +35,7 @@ class TicTacToe extends StatelessWidget {
             scaffoldBackgroundColor: AppColors.secondaryColor
           ),
           onGenerateRoute: Routes.generateRoute,
-          initialRoute: RoutesName.splashScreen,
+          initialRoute: RoutesName.homeScreen,
         );
       }
     );

@@ -70,3 +70,16 @@ class Constants{
   static String tapSound='game_sounds/tap_sound.mp3';
 }
 
+
+enum BowDirection{
+  firstRow,
+  secondRow,
+  thirdRow,
+  firstColumn,
+  secondColumn,
+  thirdColumn,
+  diagonal,
+  antiDiagonal,
+  none
+}
+

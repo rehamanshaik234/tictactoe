@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:playspace/views/game/Board.dart';
+import 'package:playspace/views/game/single_player/single_player.dart';
 import 'package:playspace/views/game/client.dart';
 
 class SelectType extends StatefulWidget {
