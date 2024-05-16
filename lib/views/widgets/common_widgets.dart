@@ -8,7 +8,8 @@ class Button extends StatelessWidget {
   final EdgeInsets margin;
   final String title;
   final VoidCallback onTap;
-  const Button({super.key, required this.padding, required this.title, required this.onTap, required this.margin});
+  final IconData? iconData;
+  const Button({super.key, required this.padding, required this.title, required this.onTap, required this.margin, required this.iconData});
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -22,7 +23,15 @@ class Button extends StatelessWidget {
         padding: padding,
         margin: margin,
         width: 1.sw,
-        child: Center(child: Text(title,style: GoogleFonts.poppins(fontSize:16.sp,fontWeight:FontWeight.w500,color:Colors.white),)),
+        child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+            Icon(iconData,color: Colors.white,size: 20.sp,),
+            SizedBox(width: 8.w,),
+            Text(title,style: GoogleFonts.poppins(fontSize:16.sp,fontWeight:FontWeight.w500,color:Colors.white),),
+          ],
+        )),
       ),
     );
   }

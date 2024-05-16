@@ -68,6 +68,10 @@ class Constants{
 
   ///Sound Assets
   static String tapSound='game_sounds/tap_sound.mp3';
+  static String gameDraw='game_sounds/game_draw.mpeg';
+  static String gameWon='game_sounds/game_won.mp3';
+  static String gameLost='game_sounds/game_lost.mpeg';
+
 }
 
 

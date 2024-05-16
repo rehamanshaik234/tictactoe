@@ -77,14 +77,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     opacity: _animation,
                     child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Single Player", onTap: (){
                       Navigator.of(context).pushNamed(RoutesName.singlePlayer);
-                    }, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w),),
+                    }, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), iconData: Icons.person,),
+                  ),
+                  FadeTransition(
+                    opacity: _animation,
+                    child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Play with Friend", onTap: (){
+                      Navigator.of(context).pushNamed(RoutesName.singlePlayer);
+                    }, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), iconData: Icons.group_outlined,),
                   ),
                   FadeTransition(
                       opacity: _animation,
-                      child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Online MultiPlayer", onTap: (){}, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w),)),
+                      child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Online MultiPlayer", onTap: (){}, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), iconData: Icons.wifi,)),
                   FadeTransition(
                       opacity: _animation,
-                      child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Offline Multiplayer", onTap: (){}, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w),))
+                      child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Offline Multiplayer", onTap: (){}, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), iconData: Icons.wifi_off_rounded,))
 
                 ],
               ),
