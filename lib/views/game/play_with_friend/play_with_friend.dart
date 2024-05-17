@@ -13,14 +13,14 @@ import 'package:playspace/utils/routes/RouteNames.dart';
 import 'package:playspace/views/game/single_player/ai_player.dart';
 
 import '../../../utils/constants/constants.dart';
-class SinglePLayer extends StatefulWidget {
-  const SinglePLayer({super.key});
+class PlayWithFriend extends StatefulWidget {
+  const PlayWithFriend({super.key});
 
   @override
-  _SinglePLayerState createState() => _SinglePLayerState();
+  _PlayWithFriendState createState() => _PlayWithFriendState();
 }
 
-class _SinglePLayerState extends State<SinglePLayer> with SingleTickerProviderStateMixin{
+class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProviderStateMixin{
   late List<List<String>> grid;
   late String currentPlayer;
   bool gameOver=false;
@@ -47,7 +47,7 @@ class _SinglePLayerState extends State<SinglePLayer> with SingleTickerProviderSt
   void initializeGame() async {
     audioPlayer.setSource(AssetSource(Constants.tapSound));
     grid = List.generate(3, (_) => List.filled(3, ''));
-    aiPlayer=AIPlayer(grid);
+    aiPlayer= AIPlayer(grid);
     currentPlayer = aiPlayer.user;
     gameOver = false;
     bowDirection = BowDirection.none;
@@ -66,7 +66,7 @@ class _SinglePLayerState extends State<SinglePLayer> with SingleTickerProviderSt
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton( onPressed : exitGame, icon: Icon(Icons.arrow_back_outlined,color: Colors.white,size: 20.sp,)),
-          title:Text("Single Player",style: GoogleFonts.poppins(color: Colors.white,),),
+          title:Text("Play With Friend",style: GoogleFonts.poppins(color: Colors.white,),),
           backgroundColor: AppColors.secondaryColor,
           actions: [
             IconButton(onPressed: showOptionsMenu, icon: Icon(Icons.settings,color: Colors.white,size: 20.sp,))

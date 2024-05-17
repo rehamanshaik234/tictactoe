@@ -18,7 +18,7 @@ class _SelectTypeState extends State<SelectType> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => Board() ));
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SinglePLayer() ));
             }, child: Text('Server')),
             ElevatedButton(onPressed: (){
               Navigator.of(context).push(MaterialPageRoute(builder: (context) => Client() ));
