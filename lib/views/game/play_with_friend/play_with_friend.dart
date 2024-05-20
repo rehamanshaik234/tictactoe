@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:math';
 
@@ -5,11 +6,13 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:playspace/controller/websocket_server/server.dart';
 import 'package:playspace/utils/constants/app_colors.dart';
 import 'package:playspace/utils/routes/RouteNames.dart';
+import 'package:playspace/views/game/play_with_friend/player/players.dart';
 import 'package:playspace/views/game/single_player/ai_player.dart';
 
 import '../../../utils/constants/constants.dart';
@@ -26,29 +29,27 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
   bool gameOver=false;
   WebSocketServer webSocketServer=WebSocketServer();
   AudioPlayer audioPlayer=AudioPlayer();
-  late AIPlayer aiPlayer;
+  late Players players= Players();
   String acknowledgement='';
   final cardKey=GlobalKey<FlipCardState>();
   BowDirection bowDirection = BowDirection.none;
-  int userScore=0;
-  int robotScore=0;
-  bool userScoreChange=false;
-  bool computerScoreChange=false;
+  int player1Score=0;
+  int player2Score=0;
+  bool player1ScoreChange=false;
+  bool player2ScoreChange=false;
   int difficultyLevel=1;
-  bool canPop=false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => showSelectAvatar());
+    // WidgetsBinding.instance.addPostFrameCallback((_) => showSelectAvatar());
     initializeGame();
   }
 
   void initializeGame() async {
     audioPlayer.setSource(AssetSource(Constants.tapSound));
     grid = List.generate(3, (_) => List.filled(3, ''));
-    aiPlayer= AIPlayer(grid);
-    currentPlayer = aiPlayer.user;
+    currentPlayer = players.player1;
     gameOver = false;
     bowDirection = BowDirection.none;
     setState(() {
@@ -103,13 +104,13 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                   ],
                                 ),
                                 padding: EdgeInsets.all(8.sp),
-                                child: Text(userScore.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
-                            SizedBox(width: userScoreChange?8.w:0.w,),
+                                child: Text(player1Score.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
+                            SizedBox(width: player1ScoreChange?8.w:0.w,),
                             Visibility(
-                              visible: userScoreChange,
+                              visible: player1ScoreChange,
                               child: AnimatedOpacity(
                                   curve: Curves.fastOutSlowIn,
-                                  opacity:userScoreChange? 1.0:0, duration: Duration(seconds: 1),
+                                  opacity:player1ScoreChange? 1.0:0, duration: Duration(seconds: 1),
                                   child: Text("+1",style: GoogleFonts.poppins(fontSize: 35.sp,color: AppColors.secondaryColor,fontWeight: FontWeight.w600),)),
                             )
                           ],
@@ -121,16 +122,16 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                               height: 30.h,
                               width: 30.w,
                               decoration: BoxDecoration(
-                                color: aiPlayer.user=='X'?Colors.yellowAccent:Colors.cyanAccent,
+                                color: players.player1=='X'?Colors.yellowAccent:Colors.cyanAccent,
                                 borderRadius: BorderRadius.circular(8.sp),
                                 border: Border.all(color: Colors.black),
                               ),
                               child: Center(
-                                child: Text(aiPlayer.user),
+                                child: Text(players.player1),
                               ),
                             ),
                             SizedBox(width: 5.w,),
-                            Text("Your Score",style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
+                            Text(players.player1Name,style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
                           ],),
                       ],
                     ),
@@ -154,13 +155,13 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                   ],
                                 ),
                                 padding: EdgeInsets.all(8.sp),
-                                child: Text(robotScore.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
-                            SizedBox(width:computerScoreChange? 8.w:0,),
+                                child: Text(player2Score.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
+                            SizedBox(width:player2ScoreChange? 8.w:0,),
                             Visibility(
-                              visible: computerScoreChange,
+                              visible: player2ScoreChange,
                               child: AnimatedOpacity(
                                   curve: Curves.bounceIn,
-                                  opacity:computerScoreChange? 1.0:0, duration: Duration(seconds: 1),
+                                  opacity:player2ScoreChange? 1.0:0, duration: Duration(seconds: 1),
                                   child: Text("+1",style: GoogleFonts.poppins(fontSize: 35.sp,color: AppColors.secondaryColor,fontWeight: FontWeight.w600),)),
                             )
                           ],
@@ -172,16 +173,16 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                               height: 30.h,
                               width: 30.w,
                               decoration: BoxDecoration(
-                                color: aiPlayer.robot=='X'?Colors.yellowAccent:Colors.cyanAccent,
+                                color: players.player2=='X'?Colors.yellowAccent:Colors.cyanAccent,
                                 borderRadius: BorderRadius.circular(8.sp),
                                 border: Border.all(color: Colors.black),
                               ),
                               child: Center(
-                                child: Text(aiPlayer.robot),
+                                child: Text(players.player2),
                               ),
                             ),
                             SizedBox(width: 5.w,),
-                            Text("Computer Score",style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
+                            Text(players.player2Name,style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
                           ],),
                       ],
                     )
@@ -190,12 +191,60 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                 SizedBox(height: 20.h,),
                 Visibility(
                   visible: !gameOver,
-                  child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.sp),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 25.w,
+                        height: 25.h,
+                        decoration: BoxDecoration(
+                          color:currentPlayer==players.player1? Colors.yellowAccent:Colors.cyanAccent,
+                          borderRadius: BorderRadius.circular(5.sp),
+                          border: Border.all(color: Colors.black),
+                        ),
+                        child: Center(
+                          child: Text(
+                            currentPlayer==players.player1?'X':'O',
+                            style: GoogleFonts.poppins(fontSize: 12.sp,fontWeight:FontWeight.w600),
+                          ),
+                        ),
                       ),
-                      padding: EdgeInsets.all(8.sp),
-                      child: Text(currentPlayer==aiPlayer.user?"Your Turn!":"Computer Turn!",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.black,),)),
+                      Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8.sp),
+                          ),
+                          padding: EdgeInsets.all(8.sp),
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                // TextSpan(text: currentPlayer==players.player1?players.player1Name:players.player2Name,
+                                //     style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.black,)
+                                // ),
+                                TextSpan(text: "Turn!",
+                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 20.sp,color:Colors.black,)
+                                ),
+                              ]
+                            ),
+                          ),
+                      ),
+                      Visibility(
+                        visible: checkGridIsEmpty(),
+                        child: InkWell(
+                          onTap: (){
+                            if(currentPlayer==players.player1){
+                              currentPlayer=players.player2;
+                            }else{
+                              currentPlayer=players.player1;
+                            }
+                            setState(() {
+
+                            });
+                          },
+                          child: Icon(Icons.refresh,color: AppColors.secondaryColor,size: 25.sp,),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
                 SizedBox(height:!gameOver? 30.h:77.h,),
                 Row(
@@ -363,24 +412,9 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     );
   }
 
-  Point<int> getBestMove(List<List<String>> grid, int depth) {
-    int bestEval = -1000;
-    Point<int> bestMove=const Point(0, 0);
-    for (var move in aiPlayer.availableMoves()) {
-      aiPlayer.makeMove(move.x, move.y, aiPlayer.robot);
-      int eval =aiPlayer.minimax(aiPlayer, depth - 1, false, -1000, 1000);
-      aiPlayer.makeMove(move.x, move.y, ''); // Undo move
-      if (eval > bestEval) {
-        bestEval = eval;
-        bestMove = move;
-      }
-    }
-
-    return bestMove;
-  }
 
   void makeMove(int row, int col)async{
-    if (!gameOver && grid[row][col] == ''&& currentPlayer==aiPlayer.user){
+    if (!gameOver && grid[row][col] == ''){
       grid[row][col] = currentPlayer;
       await audioPlayer.play(AssetSource(Constants.tapSound)).whenComplete(() async {
         if (await checkWinner(row, col)) {
@@ -393,9 +427,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
           currentPlayer = currentPlayer == 'X' ? 'O' : 'X';
           setState(() {
 
-          });
-          await Future.delayed(Duration(seconds: 1),(){
-            updateAIMove();
           });
         }
         setState(() {});
@@ -490,105 +521,150 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     return counter==3;
   }
 
-  void updateAIMove()async{
-    Point<int> index= getBestMove(grid, difficultyLevel);
-    grid[index.x][index.y]=currentPlayer;
-    await audioPlayer.play(AssetSource(Constants.tapSound));
-    if (await checkWinner(index.x, index.y)) {
-      await _startAnimation(index.x,index.y);
-    } else if (grid.every((row) => row.every((cell) => cell != ''))) {
-      await _startAnimation(index.x,index.y);
-    } else {
-      currentPlayer = currentPlayer == 'X' ? 'O' : 'X';
-      setState(() {
 
-      });
-    }
-  }
-
-  void showSelectAvatar(){
+  void showEditPlayerNames(){
+    TextEditingController player1TE=TextEditingController();
+    TextEditingController player2TE=TextEditingController();
       showDialog(context: context,
           builder: (context) {
-            return PopScope(
-              canPop: false,
-              child: AlertDialog(
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Choose your Avatar", style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20.sp,
-                        color: Colors.black),),
-                    Text("please select any one of the below",
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w500,
-                          fontSize: 16.sp,
-                          color: Colors.grey),),
-                  ],
-                ),
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        aiPlayer.user = 'X';
-                        aiPlayer.robot = 'O';
-                        currentPlayer = aiPlayer.user;
-                        aiPlayer.setUser('X');
-                        aiPlayer.setRobot('O');
-                        Navigator.of(context).pop();
-                        setState(() {
-
-                        });
-                      },
-                      child: Container(
-                        width: 70.w,
-                        height: 70.h,
-                        margin: EdgeInsets.all(8.sp),
-                        decoration: BoxDecoration(
-                          color: Colors.yellowAccent,
-                          borderRadius: BorderRadius.circular(10.sp),
-                          border: Border.all(color: Colors.black),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'X',
-                            style: GoogleFonts.poppins(fontSize: 30.sp,fontWeight:FontWeight.w600),
-                          ),
-                        ),
-                      ),
+            return StatefulBuilder(
+              builder: (context,setState2) {
+                return PopScope(
+                  canPop: true,
+                  child: AlertDialog(
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Player Names", style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20.sp,
+                            color: Colors.black),),
+                      ],
                     ),
-                    InkWell(
-                      onTap: () {
-                        aiPlayer.user = 'O';
-                        aiPlayer.robot = 'X';
-                        aiPlayer.setUser('O');
-                        aiPlayer.setRobot('X');
-                        currentPlayer = aiPlayer.user;
-                        Navigator.of(context).pop();
-                        setState(() {
-
-                        });
-                      },
-                      child: Container(
-                        width: 70.w,
-                        height: 70.h,
-                        margin: EdgeInsets.all(8.sp),
-                        decoration: BoxDecoration(
-                          color: Colors.cyanAccent,
-                          borderRadius: BorderRadius.circular(10.sp),
-                          border: Border.all(color: Colors.black),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                                width: 35.w,
+                                height: 35.h,
+                                margin: EdgeInsets.only(right: 8.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.yellowAccent,
+                                  borderRadius: BorderRadius.circular(10.sp),
+                                  border: Border.all(color: Colors.black),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'X',
+                                    style: GoogleFonts.poppins(fontSize: 15.sp,fontWeight:FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            Expanded(
+                              child: TextFormField(
+                                onChanged: (text){
+                                  setState2((){
+                                    player1TE.text=text;
+                                  });
+                                },
+                                textCapitalization: TextCapitalization.sentences,
+                                controller: player1TE,
+                                decoration: InputDecoration(
+                                  hintText: 'Player 1',
+                                  hintStyle: GoogleFonts.poppins(color:Colors.grey,fontSize:16.sp),
+                                ),
+                                onEditingComplete: (){
+                                  FocusScope.of(context).nextFocus();
+                                },
+                              ),
+                            )
+                          ],
                         ),
-                        child: Center(
-                          child: Text(
-                            'O',
-                            style: GoogleFonts.poppins(fontSize: 30.sp,fontWeight:FontWeight.w600),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              width: 35.w,
+                              height: 35.h,
+                              margin: EdgeInsets.only(right: 8.w),
+                              decoration: BoxDecoration(
+                                color: Colors.cyanAccent,
+                                borderRadius: BorderRadius.circular(10.sp),
+                                border: Border.all(color: Colors.black),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'O',
+                                  style: GoogleFonts.poppins(fontSize: 15.sp,fontWeight:FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: TextFormField(
+                                controller: player2TE,
+                                textCapitalization: TextCapitalization.sentences,
+                                onChanged: (text){
+                                  setState2((){
+                                    player2TE.text=text;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                    hintText: 'Player 2',
+                                    hintStyle: GoogleFonts.poppins(color:Colors.grey,fontSize:16.sp)
+                                ),
+                              ),
+                            )
+                          ],
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                    actions: [
+                      SizedBox(
+                          child:
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              SizedBox(
+                                width: 110.w,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if(player2TE.text.isNotEmpty && player1TE.text.isNotEmpty){
+                                      players.player1Name=player1TE.text;
+                                      players.player2Name=player2TE.text;
+                                      setState(() {
+
+                                      });
+                                    Navigator.of(context).pop();
+                                    }
+                                  },
+                                  style: ButtonStyle(
+                                      backgroundColor: MaterialStatePropertyAll<Color>(player2TE.text.isNotEmpty && player1TE.text.isNotEmpty? AppColors.secondaryColor:AppColors.secondaryColor.withOpacity(0.5)),
+                                      shape: MaterialStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
+                                  child: Text("Save" ,style: GoogleFonts.poppins(fontWeight: FontWeight.w500,color: Colors.white,fontSize:16.sp),),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 110.w,
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                  style: ButtonStyle(shape: MaterialStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
+                                  child: Text('Cancel',style: GoogleFonts.poppins(color: Colors.black,fontWeight: FontWeight.w400,fontSize:16.sp),),
+                                ),
+                              ),
+                            ],
+                          ))
+                    ],
+                  ),
+                );
+              }
             );
           });
   }
@@ -635,14 +711,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
            ))
         ],
       ),
-    ).then((value) {
-      if(value!=null&& value ){
-        setState(() {
-          canPop=true;
-        });
-        Navigator.of(context).pop();
-      }
-    });
+    );
   }
 
   Future<void> _startAnimation(int row, int col) async {
@@ -652,16 +721,16 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
       acknowledgement='Oops! 🥴 \nIts a Draw';
       soundPath=Constants.gameDraw;
     }
-    else if(currentPlayer==aiPlayer.user){
-      acknowledgement='Congratulations!\nYou Won 🥳';
-      userScore=userScore+1;
+    else if(currentPlayer==players.player1){
+      acknowledgement='Congratulations!\n${players.player1Name} Won 🥳';
+      player1Score=player1Score+1;
       soundPath=Constants.gameWon;
-      userScoreChange=true;
+      player1ScoreChange=true;
     }else{
-      acknowledgement='Sorry!\nYou Lost ☠️';
-      robotScore=robotScore+1;
-      computerScoreChange=true;
-      soundPath=Constants.gameLost;
+      acknowledgement='Congratulations!\n${players.player2Name} Won 🥳';
+      player2Score=player2Score+1;
+      player2ScoreChange=true;
+      soundPath=Constants.gameWon;
     }
     gameOver=true;
     await cardKey.currentState?.toggleCard();
@@ -671,8 +740,8 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     });
     await Future.delayed(Duration(seconds: 2));
     setState(() {
-      userScoreChange=false;
-      computerScoreChange=false;
+      player1ScoreChange=false;
+      player2ScoreChange=false;
     });
   }
 
@@ -715,9 +784,9 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
               onTap: changeAvatar,
               child: Row(
                 children: [
-                  Icon(Icons.face,color: AppColors.secondaryColor,size: 20.sp,),
+                  Icon(Icons.edit,color: AppColors.secondaryColor,size: 20.sp,),
                   SizedBox(width: 4.w,),
-                  Text("Change Avatar",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
+                  Text("Player Names",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
                 ],
               ),),
           PopupMenuItem(
@@ -757,8 +826,8 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
         cardKey.currentState?.toggleCard();
       }
       setState(() {
-        userScore=0;
-        robotScore=0;
+        player1Score=0;
+        player2Score=0;
       });
     },'Confirm',context);
   }
@@ -899,11 +968,11 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
 
  void changeAvatar() {
     if(checkGridIsEmpty()){
-      showSelectAvatar();
+      showEditPlayerNames();
     }else{
       showCustomDialog("Change Avatar?", "Your at the middle of game, if you change avatar now the game will auto reset.", () {
         resetGame();
-        showSelectAvatar();
+        showEditPlayerNames();
       },'Confirm',context);
     }
   }
