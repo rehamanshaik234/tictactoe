@@ -71,6 +71,7 @@ class Constants{
   static String gameDraw='game_sounds/game_draw.mpeg';
   static String gameWon='game_sounds/game_won.mp3';
   static String gameLost='game_sounds/game_lost.mpeg';
+  static String addPoint='game_sounds/add_point_sound.mp3';
 
 }
 

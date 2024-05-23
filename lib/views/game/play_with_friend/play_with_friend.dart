@@ -406,7 +406,17 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     InkWell(
-                      onTap: selectRounds,
+                      onTap: (){
+                        if(currentRound!=1 || !checkGridIsEmpty()) {
+                          showCustomDialog("Change Rounds ?",
+                              "If you change rounds now, the current running game will be auto-restart.", () {
+                                selectRounds();
+                                restartGame();
+                              }, "Restart", context);
+                        }else{
+                          selectRounds();
+                        }
+                      },
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.white,width: 3.w),
@@ -425,7 +435,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                       ),
                     ),
                     InkWell(
-                      onTap: restartGame,
+                      onTap: restartGameWithPopUp,
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.white,width: 3.w),
@@ -468,7 +478,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
 
           });
         }
-        setState(() {});
       });
     }
   }
@@ -683,8 +692,8 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                     }
                                   },
                                   style: ButtonStyle(
-                                      backgroundColor: MaterialStatePropertyAll<Color>(player2TE.text.isNotEmpty && player1TE.text.isNotEmpty? AppColors.secondaryColor:AppColors.secondaryColor.withOpacity(0.5)),
-                                      shape: MaterialStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
+                                      backgroundColor: WidgetStatePropertyAll<Color>(player2TE.text.isNotEmpty && player1TE.text.isNotEmpty? AppColors.secondaryColor:AppColors.secondaryColor.withOpacity(0.5)),
+                                      shape: WidgetStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
                                   child: Text("Save" ,style: GoogleFonts.poppins(fontWeight: FontWeight.w500,color: Colors.white,fontSize:16.sp),),
                                 ),
                               ),
@@ -755,21 +764,21 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
 
   Future<void> _startAnimation(int row, int col) async {
       String soundPath = '';
-      if (grid.every((row) => row.every((cell) => cell != '')) &&
-          !await checkWinner(row, col)) {
+      if (grid.every((row) => row.every((cell) => cell != '')) && !await checkWinner(row, col)) {
         acknowledgement = 'Oops! 🥴 \nIts a Draw';
+        cardKey.currentState?.toggleCard();
         soundPath = Constants.gameDraw;
       }
       else if (currentPlayer == players.player1) {
-        acknowledgement = 'Congratulations!\n${players.player1Name} Won 🥳';
+        acknowledgement = '${players.player1Name}\nWon!';
         player1Score = player1Score + 1;
-        soundPath = Constants.gameWon;
+        soundPath=Constants.addPoint;
         player1ScoreChange = true;
       } else {
-        acknowledgement = 'Congratulations!\n${players.player2Name} Won 🥳';
+        acknowledgement = '${players.player2Name}\nWon!';
         player2Score = player2Score + 1;
         player2ScoreChange = true;
-        soundPath = Constants.gameWon;
+        soundPath=Constants.addPoint;
       }
       gameOver = true;
       showGameOverDialog(soundPath);
@@ -783,7 +792,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
   }
 
   bool getVisibility(int row, int col) {
-
     if(row==0 && col==0){
       if(bowDirection==BowDirection.none|| bowDirection==BowDirection.firstColumn || bowDirection==BowDirection.firstRow || bowDirection==BowDirection.diagonal){return true;}else {return false;}
     }else if(row==0 && col==1){
@@ -818,7 +826,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
           0.0,),
         items: [
           PopupMenuItem(
-              onTap: changeAvatar,
+              onTap: showEditPlayerNames,
               child: Row(
                 children: [
                   Icon(Icons.edit,color: AppColors.secondaryColor,size: 20.sp,),
@@ -827,18 +835,26 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                 ],
               ),),
           PopupMenuItem(
-            onTap: (){
-              selectRounds();
-            },
+              onTap: (){
+                if(currentRound!=1 || !checkGridIsEmpty()) {
+                  showCustomDialog("Change Rounds ?",
+                      "If you change rounds now, the current running game will be auto-restart.", () {
+                        selectRounds();
+                        restartGame();
+                      }, "Restart", context);
+                }else{
+                  selectRounds();
+                }
+              },
               child: Row(
                 children: [
-                  Icon(Icons.auto_graph,color: AppColors.secondaryColor,size: 20.sp,),
+                  Icon(Icons.leaderboard_outlined,color: AppColors.secondaryColor,size: 20.sp,),
                   SizedBox(width: 4.w,),
-                  Text("Difficulty Level",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
+                  Text("Change Rounds",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
                 ],
               )),
           PopupMenuItem(
-            onTap: restartGame,
+            onTap: restartGameWithPopUp,
               child: Row(
                 children: [
                   Icon(Icons.refresh_rounded,color: AppColors.secondaryColor,size: 20.sp,),
@@ -853,14 +869,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     grid = List.generate(3, (_) => List.filled(3, ''));
     gameOver = false;
     bowDirection = BowDirection.none;
-      if(currentRound<totalRounds) {
-        currentRound = currentRound + 1;
-      }else if(currentRound==totalRounds){
-        currentRound=1;
-        totalRounds=5;
-        player1Score=0;
-        player2Score=0;
-      }
     if(!cardKey.currentState!.isFront){
       cardKey.currentState?.toggleCard();
     }
@@ -869,7 +877,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     });
   }
   
-  void restartGame(){
+  void restartGameWithPopUp(){
     showCustomDialog("Restart Game?", "Are you sure you want to restart the game? This will reset your score.",(){
       initializeGame();
       if(!cardKey.currentState!.isFront){
@@ -878,8 +886,25 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
       setState(() {
         player1Score=0;
         player2Score=0;
+        totalRounds=5;
+        currentRound=1;
+        currentPlayer=players.player1;
       });
     },'Confirm',context);
+  }
+
+  void restartGame(){
+    initializeGame();
+    if(!cardKey.currentState!.isFront){
+      cardKey.currentState?.toggleCard();
+    }
+    setState(() {
+      player1Score=0;
+      player2Score=0;
+      totalRounds=5;
+      currentRound=1;
+      currentPlayer=players.player1;
+    });
   }
 
   void selectRounds(){
@@ -920,8 +945,8 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                             });
                           },
                           style: ButtonStyle(
-                              backgroundColor: MaterialStatePropertyAll<Color>(AppColors.secondaryColor),
-                              shape: MaterialStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
+                              backgroundColor: WidgetStatePropertyAll<Color>(AppColors.secondaryColor),
+                              shape: WidgetStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
                           child: Text('Save',style: GoogleFonts.poppins(fontWeight: FontWeight.w500,color: Colors.white),),
                         ),
                       ),
@@ -931,7 +956,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          style: ButtonStyle(shape: MaterialStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
+                          style: ButtonStyle(shape: WidgetStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
                           child: Text('Cancel',style: GoogleFonts.poppins(color: Colors.black),),
                         ),
                       ),
@@ -1001,16 +1026,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     );
   }
 
- void changeAvatar() {
-    if(checkGridIsEmpty()){
-      showEditPlayerNames();
-    }else{
-      showCustomDialog("Change Avatar?", "Your at the middle of game, if you change avatar now the game will auto reset.", () {
-        resetGame();
-        showEditPlayerNames();
-      },'Confirm',context);
-    }
-  }
 
   void onPopInvoke(bool didPop) async{
       if (didPop) {
@@ -1057,21 +1072,27 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
 
   void showGameOverDialog(String soundPath)async {
     double halfRounds=totalRounds/2;
-    if(halfRounds.ceil()==player1Score ) {
-      print("player1 winner");
+    if(halfRounds.ceil()==player1Score) {
+      acknowledgement = 'Congratulations! ${players.player1Name} Won 🥳';
+      showCustomDialog("Game Over", acknowledgement, (){}, "Select Dare", context);
+      audioPlayer.play(AssetSource(Constants.gameWon));
     } else if(halfRounds.ceil()== player2Score){
-      print("player2 winner");
+      acknowledgement = 'Congratulations! ${players.player2Name} Won 🥳';
+      showCustomDialog("Game Over", acknowledgement, (){}, "Select Dare", context);
+      audioPlayer.play(AssetSource(Constants.gameWon));
     }else if(currentRound==totalRounds){
-      print('draw');
+      acknowledgement="You both have to select the Dare";
+      audioPlayer.play(AssetSource(Constants.gameDraw));
+      showCustomDialog("Game Draw", acknowledgement, (){}, "Select Dare", context);
     } else{
-      //rounderWin
       if(currentPlayer==players.player1){
         currentPlayer=players.player2;
       }else{
         currentPlayer=players.player1;
       }
+      cardKey.currentState?.toggleCard();
       await audioPlayer.play(AssetSource(soundPath));
-      resetGame();
+      currentRound=currentRound+1;
     }
   }
 }
