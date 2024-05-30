@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                   FadeTransition(
                     opacity: _animation,
-                    child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Play with Friend", onTap: (){
+                    child: Button(padding: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), title: "Play Together", onTap: (){
                       Navigator.of(context).pushNamed(RoutesName.playWithFriend);
                     }, margin: EdgeInsets.symmetric(vertical: 8.h,horizontal: 16.w), iconData: Icons.group_outlined,),
                   ),

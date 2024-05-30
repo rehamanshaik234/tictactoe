@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:playspace/views/game/play_with_friend/play_with_friend.dart';
 import 'package:playspace/views/home/home_screen.dart';
 
 
+import '../../views/game/play_together/play_togther.dart';
 import '../../views/game/single_player/single_player.dart';
 import 'RouteNames.dart';
 
@@ -21,7 +21,7 @@ class Routes{
 
       case RoutesName.playWithFriend:
         return MaterialPageRoute(
-            builder: (BuildContext context) => const PlayWithFriend(),
+            builder: (BuildContext context) => const PlayTogetherView(),
             settings: settings);
       default:
         return MaterialPageRoute(builder: (_){

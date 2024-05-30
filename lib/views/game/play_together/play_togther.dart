@@ -11,53 +11,27 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:playspace/controller/websocket_server/server.dart';
 import 'package:playspace/utils/constants/app_colors.dart';
-import 'package:playspace/utils/routes/RouteNames.dart';
-import 'package:playspace/views/game/play_with_friend/player/odd_number_picker.dart';
-import 'package:playspace/views/game/play_with_friend/player/players.dart';
-import 'package:playspace/views/game/single_player/ai_player.dart';
-
+import '../../widgets/custom_dialogs.dart';
+import '../../widgets/odd_number_picker.dart';
+import '../../../controller/play_together/players.dart';
 import '../../../utils/constants/constants.dart';
-class PlayWithFriend extends StatefulWidget {
-  const PlayWithFriend({super.key});
+class PlayTogetherView extends StatefulWidget {
+  const PlayTogetherView({super.key});
 
   @override
-  _PlayWithFriendState createState() => _PlayWithFriendState();
+  _PlayTogetherViewState createState() => _PlayTogetherViewState();
 }
 
-class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProviderStateMixin{
-  late List<List<String>> grid;
-  late String currentPlayer;
-  bool gameOver=false;
-  WebSocketServer webSocketServer=WebSocketServer();
-  AudioPlayer audioPlayer=AudioPlayer();
-  late Players players= Players();
-  String acknowledgement='';
-  final cardKey=GlobalKey<FlipCardState>();
-  BowDirection bowDirection = BowDirection.none;
-  int player1Score=0;
-  int player2Score=0;
-  bool player1ScoreChange=false;
-  bool player2ScoreChange=false;
-  int totalRounds=5;
-  int currentRound=1;
+class _PlayTogetherViewState extends State<PlayTogetherView> with SingleTickerProviderStateMixin{
+  late PlayTogetherController playTogetherCont= PlayTogetherController();
 
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) => showSelectAvatar());
-    initializeGame();
+    playTogetherCont.initializeGame((){setState(() {});});
   }
 
-  void initializeGame() async {
-    audioPlayer.setSource(AssetSource(Constants.tapSound));
-    grid = List.generate(3, (_) => List.filled(3, ''));
-    currentPlayer = players.player1;
-    gameOver = false;
-    bowDirection = BowDirection.none;
-    setState(() {
 
-    });
-  }
 
 
   @override
@@ -69,10 +43,10 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton( onPressed : exitGame, icon: Icon(Icons.arrow_back_outlined,color: Colors.white,size: 20.sp,)),
-          title:Text("Play With Friend",style: GoogleFonts.poppins(color: Colors.white,),),
+          title:Text("Play Together",style: GoogleFonts.poppins(color: Colors.white,),),
           backgroundColor: AppColors.secondaryColor,
           actions: [
-            IconButton(onPressed: showOptionsMenu, icon: Icon(Icons.settings,color: Colors.white,size: 20.sp,))
+            IconButton(onPressed: (){playTogetherCont.showOptionsMenu(context, setState); }, icon: Icon(Icons.settings,color: Colors.white,size: 20.sp,))
           ],
         ),
         body: Padding(
@@ -99,7 +73,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                         ],
                       ),
                       padding: EdgeInsets.all(8.sp),
-                      child: Text(currentRound==totalRounds?"Final Round":"Round - ${currentRound.toString().padLeft(2,'0')}",style: TextStyle(color: AppColors.white,fontSize: 25.sp,
+                      child: Text(playTogetherCont.currentRound==playTogetherCont.totalRounds?"Final Round":"Round - ${playTogetherCont.currentRound.toString().padLeft(2,'0')}",style: TextStyle(color: AppColors.white,fontSize: 25.sp,
                           fontWeight: FontWeight.w600,shadows: [
                             BoxShadow(
                               color:Colors.grey.withOpacity(0.5), // shadow color
@@ -138,13 +112,13 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                   ],
                                 ),
                                 padding: EdgeInsets.all(8.sp),
-                                child: Text(player1Score.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
-                            SizedBox(width: player1ScoreChange?8.w:0.w,),
+                                child: Text(playTogetherCont.player1Score.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
+                            SizedBox(width: playTogetherCont.player1ScoreChange?8.w:0.w,),
                             Visibility(
-                              visible: player1ScoreChange,
+                              visible: playTogetherCont.player1ScoreChange,
                               child: AnimatedOpacity(
                                   curve: Curves.fastOutSlowIn,
-                                  opacity:player1ScoreChange? 1.0:0, duration: Duration(seconds: 1),
+                                  opacity:playTogetherCont.player1ScoreChange? 1.0:0, duration: Duration(seconds: 1),
                                   child: Text("+1",style: GoogleFonts.poppins(fontSize: 35.sp,color: AppColors.secondaryColor,fontWeight: FontWeight.w600),)),
                             )
                           ],
@@ -158,16 +132,16 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                 height: 30.h,
                                 width: 30.w,
                                 decoration: BoxDecoration(
-                                  color: players.player1=='X'?Colors.yellowAccent:Colors.cyanAccent,
+                                  color: playTogetherCont.player1=='X'?Colors.yellowAccent:Colors.cyanAccent,
                                   borderRadius: BorderRadius.circular(8.sp),
                                   border: Border.all(color: Colors.black),
                                 ),
                                 child: Center(
-                                  child: Text(players.player1),
+                                  child: Text(playTogetherCont.player1),
                                 ),
                               ),
                               SizedBox(width: 5.w,),
-                              Text(players.player1Name,style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
+                              Text(playTogetherCont.player1Name,style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
                             ],),
                         ),
                       ],
@@ -192,13 +166,13 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                   ],
                                 ),
                                 padding: EdgeInsets.all(8.sp),
-                                child: Text(player2Score.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
-                            SizedBox(width:player2ScoreChange? 8.w:0,),
+                                child: Text(playTogetherCont.player2Score.toString().padLeft(2,'0'),style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 20.sp,color:Colors.white),)),
+                            SizedBox(width:playTogetherCont.player2ScoreChange? 8.w:0,),
                             Visibility(
-                              visible: player2ScoreChange,
+                              visible:playTogetherCont.player2ScoreChange,
                               child: AnimatedOpacity(
                                   curve: Curves.bounceIn,
-                                  opacity:player2ScoreChange? 1.0:0, duration: Duration(seconds: 1),
+                                  opacity:playTogetherCont.player2ScoreChange? 1.0:0, duration: Duration(seconds: 1),
                                   child: Text("+1",style: GoogleFonts.poppins(fontSize: 35.sp,color: AppColors.secondaryColor,fontWeight: FontWeight.w600),)),
                             )
                           ],
@@ -212,16 +186,16 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                 height: 30.h,
                                 width: 30.w,
                                 decoration: BoxDecoration(
-                                  color: players.player2=='X'?Colors.yellowAccent:Colors.cyanAccent,
+                                  color: playTogetherCont.player2=='X'?Colors.yellowAccent:Colors.cyanAccent,
                                   borderRadius: BorderRadius.circular(8.sp),
                                   border: Border.all(color: Colors.black),
                                 ),
                                 child: Center(
-                                  child: Text(players.player2),
+                                  child: Text(playTogetherCont.player2),
                                 ),
                               ),
                               SizedBox(width: 5.w,),
-                              Text(players.player2Name,style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
+                              Text(playTogetherCont.player2Name,style: GoogleFonts.poppins(fontWeight: FontWeight.w400,fontSize: 16.sp),),
                             ],),
                         ),
                       ],
@@ -230,7 +204,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                 ),
                 SizedBox(height: 20.h,),
                 Visibility(
-                  visible: !gameOver,
+                  visible: !playTogetherCont.gameOver,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -238,13 +212,13 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                         width: 25.w,
                         height: 25.h,
                         decoration: BoxDecoration(
-                          color:currentPlayer==players.player1? Colors.yellowAccent:Colors.cyanAccent,
+                          color:playTogetherCont.currentPlayer==playTogetherCont.player1? Colors.yellowAccent:Colors.cyanAccent,
                           borderRadius: BorderRadius.circular(5.sp),
                           border: Border.all(color: Colors.black),
                         ),
                         child: Center(
                           child: Text(
-                            currentPlayer==players.player1?'X':'O',
+                            playTogetherCont.currentPlayer==playTogetherCont.player1?'X':'O',
                             style: GoogleFonts.poppins(fontSize: 12.sp,fontWeight:FontWeight.w600),
                           ),
                         ),
@@ -268,13 +242,13 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                           ),
                       ),
                       Visibility(
-                        visible: checkGridIsEmpty(),
+                        visible:playTogetherCont.checkGridIsEmpty(),
                         child: InkWell(
                           onTap: (){
-                            if(currentPlayer==players.player1){
-                              currentPlayer=players.player2;
+                            if(playTogetherCont.currentPlayer==playTogetherCont.player1){
+                              playTogetherCont.currentPlayer=playTogetherCont.player2;
                             }else{
-                              currentPlayer=players.player1;
+                              playTogetherCont.currentPlayer=playTogetherCont.player1;
                             }
                             setState(() {
 
@@ -286,14 +260,14 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                     ],
                   ),
                 ),
-                SizedBox(height:!gameOver? 30.h:77.h,),
+                SizedBox(height:!playTogetherCont.gameOver? 30.h:77.h,),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                    FlipCard(
                      flipOnTouch: false,
                      speed: 1000,
-                     key: cardKey,
+                     key: playTogetherCont.cardKey,
                      front: Container(
                           decoration: BoxDecoration(
                             color: AppColors.secondaryColor,
@@ -317,20 +291,20 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: List.generate(3, (col) {
                                       return GestureDetector(
-                                        onTap: () => makeMove(row, col),
+                                        onTap: () =>playTogetherCont.makeMove(row, col,setState,context),
                                         child:  Container(
                                               width: 70.w,
                                               height: 70.h,
                                               margin: EdgeInsets.all(8.sp),
                                               decoration: BoxDecoration(
-                                                color:grid[row][col]=='' || !getVisibility(row, col)?Colors.white60: grid[row][col]=='X'? Colors.yellowAccent:Colors.cyanAccent,
+                                                color:playTogetherCont.grid[row][col]=='' || !playTogetherCont.getVisibility(row, col)?Colors.white60: playTogetherCont.grid[row][col]=='X'? Colors.yellowAccent:Colors.cyanAccent,
                                                 borderRadius: BorderRadius.circular(10.sp),
                                                 border: Border.all(color: Colors.white),
                                               ),
                                               child: Center(
                                                 child: Text(
-                                                  grid[row][col],
-                                                  style:  GoogleFonts.poppins(fontSize: 30.sp,color: getVisibility(row, col)?Colors.black:Colors.transparent ),
+                                                  playTogetherCont.grid[row][col],
+                                                  style:  GoogleFonts.poppins(fontSize: 30.sp,color: playTogetherCont.getVisibility(row, col,)?Colors.black:Colors.transparent ),
                                                 ),
                                               ),
                                         ),
@@ -342,39 +316,39 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                               Positioned(
                                   top: 35.h+4.h,
                                   left: 3*8.w,
-                                    child: AnimatedContainer(color: Colors.black,height: 3.h,width:bowDirection==BowDirection.firstRow?  70.w*3:0, duration: Duration(milliseconds: 500),)),
+                                    child: AnimatedContainer(color: Colors.black,height: 3.h,width: playTogetherCont.bowDirection==BowDirection.firstRow?  70.w*3:0, duration: Duration(milliseconds: 500),)),
                               Positioned(
                                   top: 70.h+35.h+20.h,
                                   left: 3*8.w,
-                                  child: AnimatedContainer(color: Colors.black,height: 3.h,width:bowDirection==BowDirection.secondRow? 70.w*3:0, duration: Duration(milliseconds: 500),)),
+                                  child: AnimatedContainer(color: Colors.black,height: 3.h,width:playTogetherCont.bowDirection==BowDirection.secondRow? 70.w*3:0, duration: Duration(milliseconds: 500),)),
                               Positioned(
                                   bottom: 35.h+4.h,
                                   left: 3*8.w,
-                                  child: AnimatedContainer(color: Colors.black,height: 3.h,width:bowDirection==BowDirection.thirdRow?  70.w*3:0, duration: Duration(milliseconds: 500),)),
+                                  child: AnimatedContainer(color: Colors.black,height: 3.h,width:playTogetherCont.bowDirection==BowDirection.thirdRow?  70.w*3:0, duration: Duration(milliseconds: 500),)),
                               Positioned(
                                   top: 70.h+35.h+20.h,
                                   left: 0.w,
                                   child: Transform.rotate(
                                       angle: -45 * (3.141592653589793 / 180),
-                                      child: AnimatedContainer(color: Colors.black,height: 3.h,width:bowDirection==BowDirection.antiDiagonal?  70.w*3+8.w*6:0, duration: Duration(milliseconds: 500),))),
+                                      child: AnimatedContainer(color: Colors.black,height: 3.h,width:playTogetherCont.bowDirection==BowDirection.antiDiagonal?  70.w*3+8.w*6:0, duration: Duration(milliseconds: 500),))),
                               Positioned(
                                   left: 35.h+4.h,
                                   top: 3*8.w,
-                                  child: AnimatedContainer(color: Colors.black,height:bowDirection==BowDirection.firstColumn? 70.h*3 :0,width: 3.w, duration: Duration(milliseconds: 500),)),
+                                  child: AnimatedContainer(color: Colors.black,height:playTogetherCont.bowDirection==BowDirection.firstColumn? 70.h*3 :0,width: 3.w, duration: Duration(milliseconds: 500),)),
                               Positioned(
                                   right: 70.h+35.h+20.h,
                                   top: 3*8.w,
-                                  child: AnimatedContainer(color: Colors.black,height:bowDirection==BowDirection.secondColumn? 70.h*3 :0,width: 3.w, duration: Duration(milliseconds: 500),)),
+                                  child: AnimatedContainer(color: Colors.black,height:playTogetherCont.bowDirection==BowDirection.secondColumn? 70.h*3 :0,width: 3.w, duration: Duration(milliseconds: 500),)),
                               Positioned(
                                   right: 35.h+4.h,
                                   top: 3*8.w,
-                                  child: AnimatedContainer(color: Colors.black,height:bowDirection==BowDirection.thirdColumn? 70.h*3:0 ,width: 3.w, duration: Duration(milliseconds: 500),)),
+                                  child: AnimatedContainer(color: Colors.black,height:playTogetherCont.bowDirection==BowDirection.thirdColumn? 70.h*3:0 ,width: 3.w, duration: Duration(milliseconds: 500),)),
                               Positioned(
                                   top: 70.h+35.h+20.h,
                                   left: 0.w,
                                   child: Transform.rotate(
                                       angle: 45 * (3.141592653589793 / 180),
-                                      child: AnimatedContainer(color: Colors.black,height: 3.h,width:bowDirection==BowDirection.diagonal? 70.w*3+8.w*6:0, duration: Duration(milliseconds: 500),))),
+                                      child: AnimatedContainer(color: Colors.black,height: 3.h,width:playTogetherCont.bowDirection==BowDirection.diagonal? 70.w*3+8.w*6:0, duration: Duration(milliseconds: 500),))),
                             ],
                           ),
                         ),
@@ -391,9 +365,9 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                          mainAxisAlignment: MainAxisAlignment.center,
                          crossAxisAlignment: CrossAxisAlignment.center,
                          children: [
-                           Text(acknowledgement, style: GoogleFonts.poppins(color: Colors.white,fontSize: 25.sp,fontWeight: FontWeight.w600,),textAlign: TextAlign.center,),
+                           Text(playTogetherCont.acknowledgement, style: GoogleFonts.poppins(color: Colors.white,fontSize: 25.sp,fontWeight: FontWeight.w600,),textAlign: TextAlign.center,),
                            SizedBox(height: 8.h,),
-                           IconButton(onPressed: (){ resetGame();}, icon: Icon(Icons.refresh_rounded,color: Colors.white,size: 40.sp,))
+                           IconButton(onPressed: (){ playTogetherCont.resetGame(setState);}, icon: Icon(Icons.refresh_rounded,color: Colors.white,size: 40.sp,))
                          ],
                        ),
                      ),
@@ -407,14 +381,14 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                   children: [
                     InkWell(
                       onTap: (){
-                        if(currentRound!=1 || !checkGridIsEmpty()) {
+                        if(playTogetherCont.currentRound!=1 || !playTogetherCont.checkGridIsEmpty()) {
                           showCustomDialog("Change Rounds ?",
                               "If you change rounds now, the current running game will be auto-restart.", () {
-                                selectRounds();
-                                restartGame();
+                                playTogetherCont.selectRounds(context,setState);
+                                playTogetherCont.restartGame(setState);
                               }, "Restart", context);
                         }else{
-                          selectRounds();
+                          playTogetherCont.selectRounds(context,setState);
                         }
                       },
                       child: Container(
@@ -427,7 +401,7 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text("Rounds-$totalRounds",style: GoogleFonts.poppins(color: Colors.white,fontSize: 18.sp,fontWeight: FontWeight.w600),),
+                            Text("Rounds-${playTogetherCont.totalRounds}",style: GoogleFonts.poppins(color: Colors.white,fontSize: 18.sp,fontWeight: FontWeight.w600),),
                             SizedBox(width: 4.w,),
                             Icon(Icons.edit,color: Colors.white,size: 18.sp,)
                           ],
@@ -435,7 +409,14 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                       ),
                     ),
                     InkWell(
-                      onTap: restartGameWithPopUp,
+                      onTap: (){
+                        // if(playTogetherCont.currentRound==playTogetherCont.totalRounds && !playTogetherCont.cardKey.currentState!.isFront){
+                        //   playTogetherCont.restartGame(setState);
+                        // }else{
+                        //   playTogetherCont.restartGameWithPopUp(context,setState);
+                        // }
+                        CustomDialogs.showWinDialog("Game Over", 'Rehaman', (){}, "Select Dare", context);
+                      },
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.white,width: 3.w),
@@ -464,110 +445,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
   }
 
 
-  void makeMove(int row, int col)async{
-    if (!gameOver && grid[row][col] == ''){
-      grid[row][col] = currentPlayer;
-      await audioPlayer.play(AssetSource(Constants.tapSound)).whenComplete(() async {
-        if (await checkWinner(row, col)) {
-          await _startAnimation(row,col);
-        } else if (grid.every((row) => row.every((cell) => cell != ''))) {
-          await _startAnimation(row, col);
-        } else {
-          currentPlayer = currentPlayer == 'X' ? 'O' : 'X';
-          setState(() {
-
-          });
-        }
-      });
-    }
-  }
-
-  Future<bool> checkWinner(int row, int col)async{
-
-    // Check row
-    if (grid[row].every((cell) => cell == currentPlayer)){
-      if(row==0){
-        bowDirection=BowDirection.firstRow;
-      }else if(row==1){
-        bowDirection=BowDirection.secondRow;
-      }else if(row==2){
-        bowDirection=BowDirection.thirdRow;
-      }else{
-        bowDirection=BowDirection.none;
-      }
-      setState(() {
-
-      });
-      await Future.delayed(const Duration(milliseconds: 1000));
-      return true;
-    }
-
-
-    // Check column
-    if (grid.every((row) => row[col] == currentPlayer)){
-      if(col==0){
-        bowDirection=BowDirection.firstColumn;
-      }else if(col==1){
-        bowDirection=BowDirection.secondColumn;
-      }else if(col==2){
-        bowDirection=BowDirection.thirdColumn;
-      }else{
-        bowDirection=BowDirection.none;
-      }
-      setState(() {
-
-      });
-      await Future.delayed(const Duration(milliseconds: 1000));
-      return true;
-    }
-    // Check diagonal
-    if (row == col && checkDiagonal(grid)){
-      bowDirection=BowDirection.diagonal;
-      setState(() {
-
-      });
-      await Future.delayed(const Duration(milliseconds: 1000));
-      return true;
-    }
-
-    // Check anti-diagonal
-    if (row + col == 2 && checkAntiDiagonal(grid)){
-      bowDirection=BowDirection.antiDiagonal;
-      setState(() {
-
-      });
-      await Future.delayed(const Duration(milliseconds: 1000));
-      return true;
-    }
-
-    bowDirection=BowDirection.none;
-    return false;
-
-  }
-
-  bool checkDiagonal(List<List<String>> grid) {
-    int counter=0;
-    for(int row=0;row<grid.length;row++){
-      for(int col=0;col<grid[row].length;col++){
-        if(row==col && grid[row][col]==currentPlayer && grid[row].contains(currentPlayer)){
-          counter++;
-        }
-      }
-    }
-    return counter==3;
-  }
-
-  bool checkAntiDiagonal(List<List<String>> grid) {
-    int counter=0;
-    for(int row=0;row<grid.length;row++){
-      for(int col=0;col<grid[row].length;col++){
-        if(row + col == 2 && grid[row][col]==currentPlayer && grid[row].contains(currentPlayer)){
-          counter++;
-        }
-      }
-    }
-    return counter==3;
-  }
 
 
   void showEditPlayerNames(){
@@ -683,8 +560,8 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if(player2TE.text.isNotEmpty && player1TE.text.isNotEmpty){
-                                      players.player1Name=player1TE.text;
-                                      players.player2Name=player2TE.text;
+                                      playTogetherCont.player1Name=player1TE.text;
+                                      playTogetherCont.player2Name=player2TE.text;
                                       setState(() {
 
                                       });
@@ -762,226 +639,6 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     );
   }
 
-  Future<void> _startAnimation(int row, int col) async {
-      String soundPath = '';
-      if (grid.every((row) => row.every((cell) => cell != '')) && !await checkWinner(row, col)) {
-        acknowledgement = 'Oops! 🥴 \nIts a Draw';
-        cardKey.currentState?.toggleCard();
-        soundPath = Constants.gameDraw;
-      }
-      else if (currentPlayer == players.player1) {
-        acknowledgement = '${players.player1Name}\nWon!';
-        player1Score = player1Score + 1;
-        soundPath=Constants.addPoint;
-        player1ScoreChange = true;
-      } else {
-        acknowledgement = '${players.player2Name}\nWon!';
-        player2Score = player2Score + 1;
-        player2ScoreChange = true;
-        soundPath=Constants.addPoint;
-      }
-      gameOver = true;
-      showGameOverDialog(soundPath);
-      setState(() {
-      });
-      await Future.delayed(Duration(seconds: 2));
-      setState(() {
-        player1ScoreChange = false;
-        player2ScoreChange = false;
-      });
-  }
-
-  bool getVisibility(int row, int col) {
-    if(row==0 && col==0){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.firstColumn || bowDirection==BowDirection.firstRow || bowDirection==BowDirection.diagonal){return true;}else {return false;}
-    }else if(row==0 && col==1){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.secondColumn || bowDirection==BowDirection.firstRow){return true;}else {return false;}
-    }else if(row==0 && col==2){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.thirdColumn || bowDirection==BowDirection.firstRow || bowDirection==BowDirection.antiDiagonal){return true;}else {return false;}
-    }else if(row==1 && col==0){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.firstColumn || bowDirection==BowDirection.secondRow){return true;}else {return false;}
-    }else if(row==1 && col==1){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.secondColumn || bowDirection==BowDirection.secondRow || bowDirection==BowDirection.diagonal || bowDirection==BowDirection.antiDiagonal){return true;}else {return false;}
-    }else if(row==1 && col==2){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.thirdColumn || bowDirection==BowDirection.secondRow){return true;}else {return false;}
-    }else if(row==2 && col==0){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.firstColumn || bowDirection==BowDirection.thirdRow || bowDirection==BowDirection.antiDiagonal){return true;}else {return false;}
-    }else if(row==2 && col==1){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.secondColumn || bowDirection==BowDirection.thirdRow){return true;}else {return false;}
-    }else if(row==2 && col==2){
-      if(bowDirection==BowDirection.none|| bowDirection==BowDirection.thirdRow || bowDirection==BowDirection.thirdColumn || bowDirection==BowDirection.diagonal){return true;}else {return false;}
-    }else{
-      return true;
-    }
-
-  }
-  
-  void showOptionsMenu(){
-    showMenu(
-        context: context,
-        position: RelativeRect.fromLTRB(
-          MediaQuery.of(context).size.width - 100,
-          20.0,
-          0.0,
-          0.0,),
-        items: [
-          PopupMenuItem(
-              onTap: showEditPlayerNames,
-              child: Row(
-                children: [
-                  Icon(Icons.edit,color: AppColors.secondaryColor,size: 20.sp,),
-                  SizedBox(width: 4.w,),
-                  Text("Player Names",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
-                ],
-              ),),
-          PopupMenuItem(
-              onTap: (){
-                if(currentRound!=1 || !checkGridIsEmpty()) {
-                  showCustomDialog("Change Rounds ?",
-                      "If you change rounds now, the current running game will be auto-restart.", () {
-                        selectRounds();
-                        restartGame();
-                      }, "Restart", context);
-                }else{
-                  selectRounds();
-                }
-              },
-              child: Row(
-                children: [
-                  Icon(Icons.leaderboard_outlined,color: AppColors.secondaryColor,size: 20.sp,),
-                  SizedBox(width: 4.w,),
-                  Text("Change Rounds",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
-                ],
-              )),
-          PopupMenuItem(
-            onTap: restartGameWithPopUp,
-              child: Row(
-                children: [
-                  Icon(Icons.refresh_rounded,color: AppColors.secondaryColor,size: 20.sp,),
-                  SizedBox(width: 4.w,),
-                  Text("Restart Game",style: GoogleFonts.poppins(fontWeight: FontWeight.w600,fontSize: 16.sp,color: AppColors.secondaryColor),),
-                ],
-              ))
-        ]);
-  }
-
-  void resetGame(){
-    grid = List.generate(3, (_) => List.filled(3, ''));
-    gameOver = false;
-    bowDirection = BowDirection.none;
-    if(!cardKey.currentState!.isFront){
-      cardKey.currentState?.toggleCard();
-    }
-    setState(() {
-
-    });
-  }
-  
-  void restartGameWithPopUp(){
-    showCustomDialog("Restart Game?", "Are you sure you want to restart the game? This will reset your score.",(){
-      initializeGame();
-      if(!cardKey.currentState!.isFront){
-        cardKey.currentState?.toggleCard();
-      }
-      setState(() {
-        player1Score=0;
-        player2Score=0;
-        totalRounds=5;
-        currentRound=1;
-        currentPlayer=players.player1;
-      });
-    },'Confirm',context);
-  }
-
-  void restartGame(){
-    initializeGame();
-    if(!cardKey.currentState!.isFront){
-      cardKey.currentState?.toggleCard();
-    }
-    setState(() {
-      player1Score=0;
-      player2Score=0;
-      totalRounds=5;
-      currentRound=1;
-      currentPlayer=players.player1;
-    });
-  }
-
-  void selectRounds(){
-    int rounds=totalRounds;
-    showDialog(
-      context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (context,setState2) {
-          return AlertDialog(
-            title: Text('Select Rounds',style: GoogleFonts.poppins(color: AppColors.secondaryColor,fontWeight: FontWeight.w600,fontSize: 20.sp),),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                OddNumberPicker(
-                  value: rounds,
-                  minValue: getMinRounds(),
-                  zeroPad: true,
-                  textStyle: TextStyle(color: Colors.black),
-                  maxValue: 9,
-                  isOdd:true,
-                  onChanged: (value) => setState2(() => rounds = value),
-                ),
-              ],
-            ),
-            actions: [
-              SizedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      SizedBox(
-                        width: 110.w,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            setState(() {
-                              totalRounds=rounds;
-                            });
-                          },
-                          style: ButtonStyle(
-                              backgroundColor: WidgetStatePropertyAll<Color>(AppColors.secondaryColor),
-                              shape: WidgetStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
-                          child: Text('Save',style: GoogleFonts.poppins(fontWeight: FontWeight.w500,color: Colors.white),),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 110.w,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          style: ButtonStyle(shape: WidgetStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.sp)))),
-                          child: Text('Cancel',style: GoogleFonts.poppins(color: Colors.black),),
-                        ),
-                      ),
-                    ],
-                  ))
-            ],
-          );
-        }
-      ),
-    );
-  }
-
-  bool checkGridIsEmpty() {
-    bool isEmpty=true;
-    for(int i=0;i<grid.length;i++){
-      for(int j=0;j<grid[i].length;j++){
-        if(grid[i][j]=="O" || grid[i][j]=="X"){
-          isEmpty=false;
-          break;
-        }
-      }
-    }
-    return isEmpty;
-  }
-
 
   Future<bool?> _showBackDialog() {
     return showDialog<bool>(
@@ -1044,55 +701,4 @@ class _PlayWithFriendState extends State<PlayWithFriend> with SingleTickerProvid
     }
   }
 
- int getMinRounds() {
-    if(currentRound==1){
-      return currentRound;
-    }else if(currentRound==totalRounds){
-      return currentRound;
-    }else if(currentRound==2){
-      return 3;
-    }else if(currentRound==3){
-      return 3;
-    }else if(currentRound==4){
-      return 5;
-    }else if(currentRound==5){
-      return 5;
-    }else if(currentRound==6){
-      return 7;
-    }else if(currentRound==7){
-      return 7;
-    }else if(currentRound==8){
-      return 9;
-    }else if(currentRound==9){
-      return 9;
-    }else{
-      return 1;
-    }
- }
-
-  void showGameOverDialog(String soundPath)async {
-    double halfRounds=totalRounds/2;
-    if(halfRounds.ceil()==player1Score) {
-      acknowledgement = 'Congratulations! ${players.player1Name} Won 🥳';
-      showCustomDialog("Game Over", acknowledgement, (){}, "Select Dare", context);
-      audioPlayer.play(AssetSource(Constants.gameWon));
-    } else if(halfRounds.ceil()== player2Score){
-      acknowledgement = 'Congratulations! ${players.player2Name} Won 🥳';
-      showCustomDialog("Game Over", acknowledgement, (){}, "Select Dare", context);
-      audioPlayer.play(AssetSource(Constants.gameWon));
-    }else if(currentRound==totalRounds){
-      acknowledgement="You both have to select the Dare";
-      audioPlayer.play(AssetSource(Constants.gameDraw));
-      showCustomDialog("Game Draw", acknowledgement, (){}, "Select Dare", context);
-    } else{
-      if(currentPlayer==players.player1){
-        currentPlayer=players.player2;
-      }else{
-        currentPlayer=players.player1;
-      }
-      cardKey.currentState?.toggleCard();
-      await audioPlayer.play(AssetSource(soundPath));
-      currentRound=currentRound+1;
-    }
-  }
 }
