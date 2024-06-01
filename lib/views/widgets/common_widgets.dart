@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:playspace/utils/constants/app_colors.dart';
+import 'package:playspace/utils/constants/constants.dart';
 
 class Button extends StatelessWidget {
   final EdgeInsets padding;
@@ -49,6 +50,7 @@ class SelectDare extends StatefulWidget {
 class _SelectDareState extends State<SelectDare> {
   bool isLoading=false;
   GlobalKey<FlipCardState> cardKey= GlobalKey<FlipCardState>();
+  String selectedDare='';
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +80,7 @@ class _SelectDareState extends State<SelectDare> {
             SizedBox(height: 60.h,),
             FlipCard(
               key: cardKey,
-              front:  Expanded(child:
-            Column(
+              front:  Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text( "Congratulations!",style: GoogleFonts.poppins(fontWeight: FontWeight.w400,color: Colors.black,fontSize: 20.sp),),
@@ -94,8 +95,8 @@ class _SelectDareState extends State<SelectDare> {
                 SizedBox(height: 16.h,),
                 Text( "Note: Winner will select a dare for the looser.",style: GoogleFonts.poppins(fontWeight: FontWeight.w400,color: Colors.grey,fontSize: 14.sp),),
               ],
-            )),
-              back: Text("New Dare to be done"),
+            ),
+              back: Text("\"$selectedDare\"",textAlign: TextAlign.center,),
             ),
             SizedBox(height: 60.h,),
             !isLoading? InkWell(
@@ -108,7 +109,7 @@ class _SelectDareState extends State<SelectDare> {
                       color:Colors.grey.withOpacity(0.5), // shadow color
                       spreadRadius: 3, // spread radius
                       blurRadius: 5, // blur radius
-                      offset: Offset(0, 3), // changes position of shadow
+                      offset: const Offset(0, 3), // changes position of shadow
                     ),
                   ],
                   border: Border.all(color: Colors.white,width: 3.w),
@@ -125,7 +126,7 @@ class _SelectDareState extends State<SelectDare> {
               ),
             ):Container(
               margin: EdgeInsets.symmetric(horizontal: 80.w),
-              child: LinearProgressIndicator(color: AppColors.secondaryColor,),
+              child: const LinearProgressIndicator(color: AppColors.secondaryColor,),
             ),
 
           ],
@@ -136,14 +137,19 @@ class _SelectDareState extends State<SelectDare> {
 
   selectDare()async{
     isLoading=true;
+    selectedDare='';
+    dares.shuffle();
     setState(() {
 
     });
     await Future.delayed(Duration(
       seconds: 1
     ),(){
+      selectedDare=dares.first;
       isLoading=false;
-      cardKey.currentState?.toggleCard();
+      if(cardKey.currentState!.isFront){
+        cardKey.currentState?.toggleCard();
+      }
       setState(() {
 
       });

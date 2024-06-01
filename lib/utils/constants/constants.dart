@@ -88,3 +88,25 @@ enum BowDirection{
   none
 }
 
+List<String> dares= [
+  "Sing the alphabet backward as fast as you can.",
+  "Do the chicken dance in public for 1 minute.",
+  "Wear socks on your hands for the next round.",
+  "Speak in rhymes for the next three turns.",
+  "Post a silly selfie on social media with a funny caption.",
+  "Do 10 push-ups in the silliest way possible.",
+  "Talk in a high-pitched voice for the next round.",
+  "Wear a funny hat for the rest of the game.",
+  "Dance like nobody's watching for 2 minutes straight.",
+  "Make up a rap about your opponent and perform it.",
+  "Talk like a robot for the next three turns.",
+  "Wear a fake mustache for the next round.",
+  "Do your best impression of a famous celebrity.",
+  "Speak in pig Latin for the next round.",
+  "Balance a spoon on your nose for 1 minute.",
+  "Tell a joke and keep a straight face for 30 seconds.",
+  "Do an interpretive dance of your favorite animal.",
+  "Wear your clothes backward for the next round.",
+  "Talk with your tongue sticking out for the next three turns.",
+  "Do an impression of your favorite cartoon character."
+];
